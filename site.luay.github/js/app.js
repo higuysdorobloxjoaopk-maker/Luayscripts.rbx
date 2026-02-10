@@ -2,76 +2,112 @@ const OWNER = "higuysdorobloxjoaopk-maker";
 const REPO = "Luayscripts.rbx";
 const BASE_PATH = "data/informations/users/Scripts";
 
-const container = document.getElementById("scripts");
+const scriptsContainer = document.getElementById("scripts");
 const searchInput = document.getElementById("search");
 const emptyBox = document.getElementById("empty");
 
+// Modal
+const modal = document.getElementById("modal");
+const modalClose = document.getElementById("modalClose");
+const modalBanner = document.getElementById("modalBanner");
+const modalTitle = document.getElementById("modalTitle");
+const modalDesc = document.getElementById("modalDesc");
+const modalAuthor = document.getElementById("modalAuthor");
+const modalCode = document.getElementById("modalCode");
+const copyBtn = document.getElementById("copyBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+
 let allScripts = [];
 
-// ======================= LOAD =======================
+// ====================== GITHUB HELPERS ======================
 
 async function gh(path) {
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`);
-  if (!res.ok) throw new Error("GitHub error");
+  if (!res.ok) throw new Error("GitHub API error");
   return res.json();
 }
 
+// ====================== LOAD ======================
+
 async function loadScripts() {
   allScripts = [];
-  const users = await gh(BASE_PATH);
+  scriptsContainer.innerHTML = "";
+
+  let users;
+  try {
+    users = await gh(BASE_PATH);
+  } catch (e) {
+    console.error("Erro ao carregar usuários:", e);
+    return showEmpty();
+  }
 
   for (const user of users) {
     if (user.type !== "dir") continue;
 
-    const scripts = await gh(`${BASE_PATH}/${user.name}`);
-    for (const script of scripts) {
-      if (script.type !== "dir") continue;
+    let scripts;
+    try {
+      scripts = await gh(`${BASE_PATH}/${user.name}`);
+    } catch {
+      continue;
+    }
 
-      const dataFile = await gh(`${BASE_PATH}/${user.name}/${script.name}/data.json`);
-      const content = atob(dataFile.content);
-      const data = JSON.parse(content);
+    for (const scriptFolder of scripts) {
+      if (scriptFolder.type !== "dir") continue;
 
-      data._creator = user.name;
-      data._slug = script.name;
+      try {
+        const dataFile = await gh(`${BASE_PATH}/${user.name}/${scriptFolder.name}/data.json`);
+        const content = atob(dataFile.content);
+        const data = JSON.parse(content);
 
-      allScripts.push(data);
+        data._creatorFolder = user.name;
+        data._slug = scriptFolder.name;
+
+        allScripts.push(data);
+      } catch (e) {
+        console.warn("Erro ao ler script:", user.name, scriptFolder.name, e);
+      }
     }
   }
 
   render(allScripts);
 }
 
-// ======================= RENDER =======================
+// ====================== RENDER ======================
 
 function render(list) {
-  container.innerHTML = "";
+  scriptsContainer.innerHTML = "";
   emptyBox.classList.add("hidden");
 
-  if (list.length === 0) {
-    emptyBox.classList.remove("hidden");
-    return;
+  if (!list || list.length === 0) {
+    return showEmpty();
   }
 
   for (const s of list) {
     const card = document.createElement("div");
     card.className = "script-card";
+
+    const isOfficial = s.author?.toLowerCase() === "luay";
+
     card.innerHTML = `
-      <div class="banner" style="background-image:url('${s.banner || ""}')"></div>
-      <h2>${escapeHTML(s.title)}</h2>
-      <p>${escapeHTML(s.description)}</p>
-      <div class="author">
-        <img src="https://cdn.discordapp.com/avatars/${s.author_id}/${s.avatar || ""}.png?size=64"
-             onerror="this.style.display='none'">
-        <span>${escapeHTML(s.author)}</span>
+      <div class="card-banner" style="background-image:url('${escapeAttr(s.banner || "")}')"></div>
+      <div class="card-body">
+        <div class="card-title">${escapeHTML(s.title || "Sem título")}</div>
+        <div class="card-desc">${escapeHTML(s.description || "")}</div>
+        <div class="card-author">
+          <img src="https://cdn.discordapp.com/avatars/${s.author_id}/${s.avatar || ""}.png?size=64"
+               onerror="this.style.display='none'">
+          <span>${escapeHTML(s.author || "Desconhecido")}</span>
+          ${isOfficial ? `<span class="official-badge">OFICIAL</span>` : ``}
+        </div>
       </div>
     `;
 
-    card.onclick = () => openScript(s);
-    container.appendChild(card);
+    card.onclick = () => openModal(s);
+    scriptsContainer.appendChild(card);
   }
 }
 
-// ======================= SEARCH =======================
+// ====================== SEARCH ======================
 
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.trim().toLowerCase();
@@ -80,18 +116,21 @@ searchInput.addEventListener("input", () => {
 
   let result = [];
 
+  // criador.script  OR  criador.
   if (q.includes(".")) {
     const [creator, script] = q.split(".");
     result = allScripts.filter(s =>
-      s.author.toLowerCase().includes(creator) &&
-      (!script || s.title.toLowerCase().includes(script))
+      (s.author || "").toLowerCase().includes(creator) &&
+      (!script || (s.title || "").toLowerCase().includes(script))
     );
-  } else {
+  } 
+  // script ou palavra
+  else {
     const words = q.split(" ");
     result = allScripts.filter(s =>
       words.every(w =>
-        s.title.toLowerCase().includes(w) ||
-        s.author.toLowerCase().includes(w)
+        (s.title || "").toLowerCase().includes(w) ||
+        (s.author || "").toLowerCase().includes(w)
       )
     );
   }
@@ -99,39 +138,65 @@ searchInput.addEventListener("input", () => {
   render(result);
 });
 
-// ======================= VIEW PAGE =======================
+// ====================== MODAL ======================
 
-function openScript(s) {
-  const modal = document.getElementById("modal");
+function openModal(s) {
   modal.classList.remove("hidden");
 
-  modal.querySelector(".modal-banner").style.backgroundImage = `url('${s.banner || ""}')`;
-  modal.querySelector(".modal-title").textContent = s.title;
-  modal.querySelector(".modal-desc").textContent = s.description;
-  modal.querySelector(".modal-author").textContent = s.author;
-  modal.querySelector(".modal-code").textContent = s.script;
+  modalBanner.style.backgroundImage = `url('${s.banner || ""}')`;
+  modalTitle.textContent = s.title || "";
+  modalDesc.textContent = s.description || "";
 
-  modal.querySelector(".copy-btn").onclick = () => {
-    navigator.clipboard.writeText(s.script);
+  const isOfficial = s.author?.toLowerCase() === "luay";
+
+  modalAuthor.innerHTML = `
+    <img src="https://cdn.discordapp.com/avatars/${s.author_id}/${s.avatar || ""}.png?size=64"
+         onerror="this.style.display='none'">
+    <span>${escapeHTML(s.author || "")}</span>
+    ${isOfficial ? `<span class="official-badge">OFICIAL</span>` : ``}
+  `;
+
+  modalCode.textContent = s.script || "";
+
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(s.script || "");
+    copyBtn.textContent = "Copiado!";
+    setTimeout(() => copyBtn.textContent = "Copiar", 1200);
   };
 
-  modal.querySelector(".download-btn").onclick = () => {
-    const blob = new Blob([s.script], { type: "text/plain" });
+  downloadBtn.onclick = () => {
+    const blob = new Blob([s.script || ""], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${s._slug}.txt`;
+    a.download = `${(s._slug || "script")}.txt`;
     a.click();
   };
 }
 
-// ======================= UTILS =======================
+modalClose.onclick = () => modal.classList.add("hidden");
+modal.onclick = e => {
+  if (e.target === modal) modal.classList.add("hidden");
+};
+
+// ====================== EMPTY ======================
+
+function showEmpty() {
+  emptyBox.classList.remove("hidden");
+  scriptsContainer.innerHTML = "";
+}
+
+// ====================== UTILS ======================
 
 function escapeHTML(text) {
-  return text.replace(/[&<>"']/g, m =>
+  return String(text).replace(/[&<>"']/g, m =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])
   );
 }
 
-// ======================= INIT =======================
+function escapeAttr(text) {
+  return String(text).replace(/"/g, "&quot;");
+}
+
+// ====================== INIT ======================
 
 loadScripts();
