@@ -17,7 +17,10 @@ const modalCode = document.getElementById("modalCode");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const commentsBox = document.querySelector(".comments-list");
+const commentInput = document.querySelector(".comment-input input");
+const commentBtn = document.querySelector(".comment-input button");
 
+let currentIssueUrl = null;
 let allScripts = [];
 
 // ====================== GITHUB HELPERS ======================
@@ -185,6 +188,8 @@ modal.onclick = e => {
 
 async function loadComments(script) {
   commentsBox.innerHTML = "Carregando comentários...";
+  commentInput.value = "";
+  currentIssueUrl = null;
 
   const issueKey = script._issueKey;
   const query = `"${issueKey}" in:title`;
@@ -193,15 +198,17 @@ async function loadComments(script) {
 
   if (!result || !result.items || result.items.length === 0) {
     const issueUrl = `https://github.com/${OWNER}/${REPO}/issues/new?title=${encodeURIComponent(issueKey)}&body=${encodeURIComponent("Comentários para o script: " + script.title)}`;
+    currentIssueUrl = issueUrl;
 
     commentsBox.innerHTML = `
       <p>Sem comentários ainda.</p>
-      <a href="${issueUrl}" target="_blank" style="color:#6cff9c">Criar primeiro comentário</a>
+      <p style="opacity:.8">Clique na caixa abaixo para criar o primeiro comentário.</p>
     `;
     return;
   }
 
   const issue = result.items[0];
+  currentIssueUrl = issue.html_url;
 
   const commentsRes = await fetch(issue.comments_url);
   const comments = await commentsRes.json();
@@ -212,11 +219,25 @@ async function loadComments(script) {
   }
 
   commentsBox.innerHTML = comments.map(c => `
-    <div style="margin-bottom:6px">
+    <div style="margin-bottom:8px">
       <strong>${escapeHTML(c.user.login)}</strong>: ${escapeHTML(c.body)}
     </div>
   `).join("");
 }
+
+// ====================== COMMENT CLICK ======================
+
+commentInput.onclick = () => {
+  if (currentIssueUrl) {
+    window.open(currentIssueUrl, "_blank");
+  }
+};
+
+commentBtn.onclick = () => {
+  if (currentIssueUrl) {
+    window.open(currentIssueUrl, "_blank");
+  }
+};
 
 // ====================== EMPTY ======================
 
