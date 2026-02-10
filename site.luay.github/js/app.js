@@ -1,123 +1,97 @@
-const scriptsContainer = document.getElementById("scripts");
-const searchInput = document.getElementById("search");
+const scriptsGrid = document.getElementById("scripts");
 const modal = document.getElementById("modal");
 const modalClose = document.getElementById("modalClose");
-const modalBanner = document.getElementById("modalBanner");
 const modalTitle = document.getElementById("modalTitle");
 const modalDesc = document.getElementById("modalDesc");
 const modalAuthor = document.getElementById("modalAuthor");
 const modalCode = document.getElementById("modalCode");
+const modalBanner = document.getElementById("modalBanner");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
-const emptyState = document.getElementById("empty");
+const searchInput = document.getElementById("search");
+const emptyBox = document.getElementById("empty");
 
 let allScripts = [];
 
-/* ======================= UTIL ======================= */
-
-function escapeHTML(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function showModal() {
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-}
-
-function hideModal() {
-  modal.classList.add("hidden");
-  document.body.style.overflow = "";
-  modalCode.textContent = "";
-}
-
-modalClose.onclick = hideModal;
-modal.onclick = e => {
-  if (e.target === modal) hideModal();
-};
-
-/* ======================= LOAD SCRIPTS ======================= */
+// ======================= LOAD =======================
 
 async function loadScripts() {
   try {
-    const res = await fetch("data/scripts.json");
-    const list = await res.json();
-    allScripts = list;
-    renderScripts(list);
-  } catch (err) {
-    console.error("Erro ao carregar scripts:", err);
+    const res = await fetch("data/index.json?cache=" + Date.now());
+    const data = await res.json();
+    allScripts = data;
+    renderScripts(data);
+  } catch (e) {
+    console.error("Erro ao carregar scripts:", e);
+    emptyBox.classList.remove("hidden");
   }
 }
 
-/* ======================= RENDER LIST ======================= */
+// ======================= RENDER =======================
 
 function renderScripts(list) {
-  scriptsContainer.innerHTML = "";
+  scriptsGrid.innerHTML = "";
+  emptyBox.classList.toggle("hidden", list.length !== 0);
 
-  if (!list.length) {
-    emptyState.classList.remove("hidden");
-    return;
-  } else {
-    emptyState.classList.add("hidden");
-  }
-
-  for (const script of list) {
+  list.forEach(script => {
     const card = document.createElement("div");
     card.className = "script-card";
 
-    card.innerHTML = `
-      <div class="script-thumb" style="background-image:url('${script.banner || "assets/no-banner.png"}')"></div>
-      <div class="script-info">
-        <div class="script-title">${escapeHTML(script.title)}</div>
-        <div class="script-author">por ${escapeHTML(script.author)}</div>
-      </div>
-    `;
+    const img = document.createElement("img");
+    img.src = script.banner || "assets/default-banner.jpg";
+    img.alt = script.title;
+
+    const title = document.createElement("div");
+    title.className = "script-title";
+    title.textContent = script.title;
+
+    const author = document.createElement("div");
+    author.className = "script-author";
+    author.textContent = "by " + script.author;
+
+    card.appendChild(img);
+    card.appendChild(title);
+    card.appendChild(author);
 
     card.onclick = () => openModal(script);
-    scriptsContainer.appendChild(card);
-  }
+    scriptsGrid.appendChild(card);
+  });
 }
 
-/* ======================= MODAL ======================= */
+// ======================= MODAL =======================
 
-async function openModal(script) {
+function openModal(script) {
+  modal.classList.remove("hidden");
+
   modalTitle.textContent = script.title;
   modalDesc.textContent = script.description || "";
-  modalAuthor.textContent = `por ${script.author}`;
-  modalBanner.style.backgroundImage = `url('${script.banner || "assets/no-banner.png"}')`;
+  modalAuthor.textContent = "by " + script.author;
 
-  modalCode.textContent = "Carregando script...";
+  modalBanner.style.backgroundImage = `url(${script.banner || "assets/default-banner.jpg"})`;
 
-  try {
-    const res = await fetch(script.raw_url);
-    if (!res.ok) throw new Error("Erro ao baixar código");
-    const code = await res.text();
-    modalCode.textContent = code;
+  const raw = script.raw_url;
 
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(code);
-      copyBtn.textContent = "Copiado!";
-      setTimeout(() => (copyBtn.textContent = "Copiar"), 1200);
-    };
+  modalCode.textContent = `loadstring(game:HttpGet("${raw}"))()`;
 
-    downloadBtn.onclick = () => {
-      const blob = new Blob([code], { type: "text/plain" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${script.id || "script"}.lua`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    };
-  } catch (err) {
-    modalCode.textContent = "Erro ao carregar o script.";
-    console.error(err);
-  }
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(modalCode.textContent);
+    copyBtn.textContent = "Copiado!";
+    setTimeout(() => copyBtn.textContent = "Copiar", 1200);
+  };
 
-  showModal();
+  downloadBtn.onclick = () => {
+    window.open(raw, "_blank");
+  };
 }
 
-/* ======================= SEARCH ======================= */
+// ======================= CLOSE =======================
+
+modalClose.onclick = () => modal.classList.add("hidden");
+modal.onclick = e => {
+  if (e.target === modal) modal.classList.add("hidden");
+};
+
+// ======================= SEARCH =======================
 
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.toLowerCase();
@@ -128,6 +102,6 @@ searchInput.addEventListener("input", () => {
   renderScripts(filtered);
 });
 
-/* ======================= INIT ======================= */
+// ======================= INIT =======================
 
 loadScripts();
