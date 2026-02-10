@@ -16,6 +16,7 @@ const modalAuthor = document.getElementById("modalAuthor");
 const modalCode = document.getElementById("modalCode");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const commentsBox = document.querySelector(".comments-list");
 
 let allScripts = [];
 
@@ -24,6 +25,12 @@ let allScripts = [];
 async function gh(path) {
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`);
   if (!res.ok) throw new Error("GitHub API error");
+  return res.json();
+}
+
+async function ghIssues(query) {
+  const res = await fetch(`https://api.github.com/search/issues?q=repo:${OWNER}/${REPO}+${encodeURIComponent(query)}`);
+  if (!res.ok) return null;
   return res.json();
 }
 
@@ -61,6 +68,7 @@ async function loadScripts() {
 
         data._creatorFolder = user.name;
         data._slug = scriptFolder.name;
+        data._issueKey = `${user.name}/${scriptFolder.name}`;
 
         allScripts.push(data);
       } catch (e) {
@@ -94,8 +102,6 @@ function render(list) {
         <div class="card-title">${escapeHTML(s.title || "Sem título")}</div>
         <div class="card-desc">${escapeHTML(s.description || "")}</div>
         <div class="card-author">
-          <img src="https://cdn.discordapp.com/avatars/${s.author_id}/${s.avatar || ""}.png?size=64"
-               onerror="this.style.display='none'">
           <span>${escapeHTML(s.author || "Desconhecido")}</span>
           ${isOfficial ? `<span class="official-badge">OFICIAL</span>` : ``}
         </div>
@@ -116,16 +122,13 @@ searchInput.addEventListener("input", () => {
 
   let result = [];
 
-  // criador.script  OR  criador.
   if (q.includes(".")) {
     const [creator, script] = q.split(".");
     result = allScripts.filter(s =>
       (s.author || "").toLowerCase().includes(creator) &&
       (!script || (s.title || "").toLowerCase().includes(script))
     );
-  } 
-  // script ou palavra
-  else {
+  } else {
     const words = q.split(" ");
     result = allScripts.filter(s =>
       words.every(w =>
@@ -140,7 +143,7 @@ searchInput.addEventListener("input", () => {
 
 // ====================== MODAL ======================
 
-function openModal(s) {
+async function openModal(s) {
   modal.classList.remove("hidden");
 
   modalBanner.style.backgroundImage = `url('${s.banner || ""}')`;
@@ -150,8 +153,6 @@ function openModal(s) {
   const isOfficial = s.author?.toLowerCase() === "luay";
 
   modalAuthor.innerHTML = `
-    <img src="https://cdn.discordapp.com/avatars/${s.author_id}/${s.avatar || ""}.png?size=64"
-         onerror="this.style.display='none'">
     <span>${escapeHTML(s.author || "")}</span>
     ${isOfficial ? `<span class="official-badge">OFICIAL</span>` : ``}
   `;
@@ -171,12 +172,51 @@ function openModal(s) {
     a.download = `${(s._slug || "script")}.txt`;
     a.click();
   };
+
+  loadComments(s);
 }
 
 modalClose.onclick = () => modal.classList.add("hidden");
 modal.onclick = e => {
   if (e.target === modal) modal.classList.add("hidden");
 };
+
+// ====================== COMMENTS ======================
+
+async function loadComments(script) {
+  commentsBox.innerHTML = "Carregando comentários...";
+
+  const issueKey = script._issueKey;
+  const query = `"${issueKey}" in:title`;
+
+  const result = await ghIssues(query);
+
+  if (!result || !result.items || result.items.length === 0) {
+    const issueUrl = `https://github.com/${OWNER}/${REPO}/issues/new?title=${encodeURIComponent(issueKey)}&body=${encodeURIComponent("Comentários para o script: " + script.title)}`;
+
+    commentsBox.innerHTML = `
+      <p>Sem comentários ainda.</p>
+      <a href="${issueUrl}" target="_blank" style="color:#6cff9c">Criar primeiro comentário</a>
+    `;
+    return;
+  }
+
+  const issue = result.items[0];
+
+  const commentsRes = await fetch(issue.comments_url);
+  const comments = await commentsRes.json();
+
+  if (!comments || comments.length === 0) {
+    commentsBox.innerHTML = "<p>Sem comentários ainda.</p>";
+    return;
+  }
+
+  commentsBox.innerHTML = comments.map(c => `
+    <div style="margin-bottom:6px">
+      <strong>${escapeHTML(c.user.login)}</strong>: ${escapeHTML(c.body)}
+    </div>
+  `).join("");
+}
 
 // ====================== EMPTY ======================
 
