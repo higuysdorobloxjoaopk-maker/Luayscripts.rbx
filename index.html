@@ -456,57 +456,52 @@
     }
 
     async function handleCredentialResponse(response) {
-      const token = response.credential;
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      const data = JSON.parse(jsonPayload);
+  const token = response.credential;
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  );
+  const data = JSON.parse(jsonPayload);
 
-      const existingUser = allUsers.find(u => u.email === data.email);
+  let user = allUsers.find(u => u.email === data.email);
 
-      if (existingUser) {
-        currentUser = existingUser;
-      } else {
-        const newUser = {
-          type: 'user',
-          user_id: 'user_' + Date.now(),
-          username: data.name,
-          email: data.email,
-          avatar: data.picture || '',
-          bio: '',
-          followers: 0,
-          following: 0,
-          provider: 'google',
-          created_at: new Date().toISOString()
-        };
+  if (!user) {
+    user = {
+      type: 'user',
+      user_id: 'user_' + Date.now(),
+      username: data.name,
+      email: data.email,
+      avatar: data.picture || '',
+      bio: '',
+      followers: 0,
+      following: 0,
+      provider: 'google',
+      created_at: new Date().toISOString()
+    };
+    await window.dataSdk.create(user);
+  }
 
-        await window.dataSdk.create(newUser);
-        currentUser = newUser;
-      }
-
-      localStorage.setItem('luay_user', JSON.stringify(currentUser));
-      showUserMode();
+  currentUser = user;
+  localStorage.setItem('luay_user', JSON.stringify(user));
+  showUserMode();
     }
 
     function checkLogin() {
-      const saved = localStorage.getItem('luay_user');
-      if (saved) {
-        try {
-          currentUser = JSON.parse(saved);
-          const stillExists = allUsers.find(u => u.user_id === currentUser.user_id);
-          if (stillExists) {
-            currentUser = stillExists;
-            showUserMode();
-          }
-        } catch {
-          localStorage.removeItem('luay_user');
-        }
-      }
+  const saved = localStorage.getItem('luay_user');
+  if (!saved) return;
+
+  try {
+    const parsed = JSON.parse(saved);
+    const dbUser = allUsers.find(u => u.email === parsed.email);
+    if (dbUser) {
+      currentUser = dbUser;
+      showUserMode();
+    }
+  } catch {}
     }
 
     function showUserMode() {
