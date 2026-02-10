@@ -16,6 +16,7 @@ const modalAuthor = document.getElementById("modalAuthor");
 const modalCode = document.getElementById("modalCode");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const rawBtn = document.getElementById("rawBtn");
 const commentsBox = document.querySelector(".comments-list");
 const commentInput = document.querySelector(".comment-input input");
 const commentBtn = document.querySelector(".comment-input button");
@@ -71,6 +72,8 @@ async function loadScripts() {
 
         data._creatorFolder = user.name;
         data._slug = scriptFolder.name;
+        data._luaPath = `${BASE_PATH}/${user.name}/${scriptFolder.name}/${scriptFolder.name}.lua`;
+        data._rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${data._luaPath}`;
         data._issueKey = `${user.name}/${scriptFolder.name}`;
 
         allScripts.push(data);
@@ -172,8 +175,13 @@ async function openModal(s) {
     const blob = new Blob([s.script || ""], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${(s._slug || "script")}.txt`;
+    a.download = `${(s._slug || "script")}.lua`;
     a.click();
+  };
+
+  rawBtn.onclick = () => {
+    navigator.clipboard.writeText(s._rawUrl);
+    window.open(s._rawUrl, "_blank");
   };
 
   loadComments(s);
@@ -228,15 +236,11 @@ async function loadComments(script) {
 // ====================== COMMENT CLICK ======================
 
 commentInput.onclick = () => {
-  if (currentIssueUrl) {
-    window.open(currentIssueUrl, "_blank");
-  }
+  if (currentIssueUrl) window.open(currentIssueUrl, "_blank");
 };
 
 commentBtn.onclick = () => {
-  if (currentIssueUrl) {
-    window.open(currentIssueUrl, "_blank");
-  }
+  if (currentIssueUrl) window.open(currentIssueUrl, "_blank");
 };
 
 // ====================== EMPTY ======================
