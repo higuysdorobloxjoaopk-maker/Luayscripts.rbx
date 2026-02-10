@@ -21,20 +21,14 @@ const commentsBox = document.querySelector(".comments-list");
 const commentInput = document.querySelector(".comment-input input");
 const commentBtn = document.querySelector(".comment-input button");
 
-let currentIssueUrl = null;
 let allScripts = [];
+let currentThreadUrl = null;
 
 // ====================== GITHUB HELPERS ======================
 
 async function gh(path) {
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`);
   if (!res.ok) throw new Error("GitHub API error");
-  return res.json();
-}
-
-async function ghIssues(query) {
-  const res = await fetch(`https://api.github.com/search/issues?q=repo:${OWNER}/${REPO}+${encodeURIComponent(query)}`);
-  if (!res.ok) return null;
   return res.json();
 }
 
@@ -74,7 +68,6 @@ async function loadScripts() {
         data._slug = scriptFolder.name;
         data._luaPath = `${BASE_PATH}/${user.name}/${scriptFolder.name}/${scriptFolder.name}.lua`;
         data._rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${data._luaPath}`;
-        data._issueKey = `${user.name}/${scriptFolder.name}`;
 
         allScripts.push(data);
       } catch (e) {
@@ -149,7 +142,7 @@ searchInput.addEventListener("input", () => {
 
 // ====================== MODAL ======================
 
-async function openModal(s) {
+function openModal(s) {
   modal.classList.remove("hidden");
 
   modalBanner.style.backgroundImage = `url('${s.banner || ""}')`;
@@ -168,7 +161,7 @@ async function openModal(s) {
   copyBtn.onclick = () => {
     navigator.clipboard.writeText(s.script || "");
     copyBtn.textContent = "Copiado!";
-    setTimeout(() => copyBtn.textContent = "Copiar", 1200);
+    setTimeout(() => (copyBtn.textContent = "Copiar"), 1200);
   };
 
   downloadBtn.onclick = () => {
@@ -192,55 +185,40 @@ modal.onclick = e => {
   if (e.target === modal) modal.classList.add("hidden");
 };
 
-// ====================== COMMENTS ======================
+// ====================== COMMENTS (DISCORD THREAD) ======================
 
-async function loadComments(script) {
-  commentsBox.innerHTML = "Carregando comentários...";
+function loadComments(script) {
+  commentsBox.innerHTML = "";
   commentInput.value = "";
-  currentIssueUrl = null;
+  currentThreadUrl = null;
 
-  const issueKey = script._issueKey;
-  const query = `"${issueKey}" in:title`;
-
-  const result = await ghIssues(query);
-
-  if (!result || !result.items || result.items.length === 0) {
-    const issueUrl = `https://github.com/${OWNER}/${REPO}/issues/new?title=${encodeURIComponent(issueKey)}&body=${encodeURIComponent("Comentários para o script: " + script.title)}`;
-    currentIssueUrl = issueUrl;
-
-    commentsBox.innerHTML = `
-      <p>Sem comentários ainda.</p>
-      <p style="opacity:.8">Clique na caixa abaixo para criar o primeiro comentário.</p>
-    `;
+  if (!script.thread_url) {
+    commentsBox.innerHTML = `<p style="opacity:.7">Comentários indisponíveis.</p>`;
+    commentInput.placeholder = "Comentários desativados";
+    commentInput.disabled = true;
+    commentBtn.disabled = true;
     return;
   }
 
-  const issue = result.items[0];
-  currentIssueUrl = issue.html_url;
+  currentThreadUrl = script.thread_url;
+  commentInput.disabled = false;
+  commentBtn.disabled = false;
+  commentInput.placeholder = "Clique aqui para comentar no Discord";
 
-  const commentsRes = await fetch(issue.comments_url);
-  const comments = await commentsRes.json();
-
-  if (!comments || comments.length === 0) {
-    commentsBox.innerHTML = "<p>Sem comentários ainda.</p>";
-    return;
-  }
-
-  commentsBox.innerHTML = comments.map(c => `
-    <div style="margin-bottom:8px">
-      <strong>${escapeHTML(c.user.login)}</strong>: ${escapeHTML(c.body)}
-    </div>
-  `).join("");
+  commentsBox.innerHTML = `
+    <p style="opacity:.7">Comentários são feitos no Discord.</p>
+    <p style="opacity:.7">Clique abaixo para abrir o tópico.</p>
+  `;
 }
 
 // ====================== COMMENT CLICK ======================
 
 commentInput.onclick = () => {
-  if (currentIssueUrl) window.open(currentIssueUrl, "_blank");
+  if (currentThreadUrl) window.open(currentThreadUrl, "_blank");
 };
 
 commentBtn.onclick = () => {
-  if (currentIssueUrl) window.open(currentIssueUrl, "_blank");
+  if (currentThreadUrl) window.open(currentThreadUrl, "_blank");
 };
 
 // ====================== EMPTY ======================
@@ -254,7 +232,7 @@ function showEmpty() {
 
 function escapeHTML(text) {
   return String(text).replace(/[&<>"']/g, m =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])
+    ({ "&": "&amp;", "<": "&lt;", ">": "&lt;", '"': "&quot;", "'": "&#039;" }[m])
   );
 }
 
