@@ -444,28 +444,15 @@
     }
 
     function initGoogleSignIn() {
-    window.google.accounts.id.initialize({
-        client_id: '844922830132-ce9t0racuihl8jfpglmgnuciifq1liof.apps.googleusercontent.com',
-        callback: handleCredentialResponse
-    });
+  google.accounts.id.initialize({
+    client_id: '844922830132-ce9t0racuihl8jfpglmgnuciifq1liof.apps.googleusercontent.com',
+    callback: handleCredentialResponse
+  });
 
-    window.google.accounts.id.renderButton(
-        document.getElementById('google-login-container'),
-        { theme: 'outline', size: 'medium', width: '200', text: 'signin' }
-    )
-     
-    window.google.accounts.id.prompt();
-    }
-
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-login-container'),
-        {
-          theme: 'outline',
-          size: 'medium',
-          width: '200',
-          text: 'signin'
-        }
-      );
+  google.accounts.id.renderButton(
+    document.getElementById('google-login-container'),
+    { theme: 'outline', size: 'medium', width: 200 }
+  );
     }
 
     async function handleCredentialResponse(response) {
