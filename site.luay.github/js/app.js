@@ -21,8 +21,8 @@ const commentsBox = document.querySelector(".comments-list");
 const commentInput = document.querySelector(".comment-input input");
 const commentBtn = document.querySelector(".comment-input button");
 
-let allScripts = [];
 let currentThreadUrl = null;
+let allScripts = [];
 
 // ====================== GITHUB HELPERS ======================
 
@@ -85,9 +85,7 @@ function render(list) {
   scriptsContainer.innerHTML = "";
   emptyBox.classList.add("hidden");
 
-  if (!list || list.length === 0) {
-    return showEmpty();
-  }
+  if (!list || list.length === 0) return showEmpty();
 
   for (const s of list) {
     const card = document.createElement("div");
@@ -116,7 +114,6 @@ function render(list) {
 
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.trim().toLowerCase();
-
   if (!q) return render(allScripts);
 
   let result = [];
@@ -142,7 +139,7 @@ searchInput.addEventListener("input", () => {
 
 // ====================== MODAL ======================
 
-function openModal(s) {
+async function openModal(s) {
   modal.classList.remove("hidden");
 
   modalBanner.style.backgroundImage = `url('${s.banner || ""}')`;
@@ -150,32 +147,40 @@ function openModal(s) {
   modalDesc.textContent = s.description || "";
 
   const isOfficial = s.author?.toLowerCase() === "luay";
-
   modalAuthor.innerHTML = `
     <span>${escapeHTML(s.author || "")}</span>
     ${isOfficial ? `<span class="official-badge">OFICIAL</span>` : ``}
   `;
 
-  modalCode.textContent = s.script || "";
+  modalCode.textContent = "Carregando código...";
 
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(s.script || "");
-    copyBtn.textContent = "Copiado!";
-    setTimeout(() => (copyBtn.textContent = "Copiar"), 1200);
-  };
+  try {
+    const res = await fetch(s._rawUrl);
+    const code = await res.text();
+    modalCode.textContent = code;
 
-  downloadBtn.onclick = () => {
-    const blob = new Blob([s.script || ""], { type: "text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${(s._slug || "script")}.lua`;
-    a.click();
-  };
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(code);
+      copyBtn.textContent = "Copiado!";
+      setTimeout(() => copyBtn.textContent = "Copiar", 1200);
+    };
 
-  rawBtn.onclick = () => {
-    navigator.clipboard.writeText(s._rawUrl);
-    window.open(s._rawUrl, "_blank");
-  };
+    downloadBtn.onclick = () => {
+      const blob = new Blob([code], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${(s._slug || "script")}.lua`;
+      a.click();
+    };
+
+    rawBtn.onclick = () => {
+      navigator.clipboard.writeText(s._rawUrl);
+      window.open(s._rawUrl, "_blank");
+    };
+
+  } catch (e) {
+    modalCode.textContent = "Erro ao carregar o script.";
+  }
 
   loadComments(s);
 }
@@ -185,33 +190,12 @@ modal.onclick = e => {
   if (e.target === modal) modal.classList.add("hidden");
 };
 
-// ====================== COMMENTS (DISCORD THREAD) ======================
+// ====================== COMMENTS ======================
 
 function loadComments(script) {
-  commentsBox.innerHTML = "";
-  commentInput.value = "";
-  currentThreadUrl = null;
-
-  if (!script.thread_url) {
-    commentsBox.innerHTML = `<p style="opacity:.7">Comentários indisponíveis.</p>`;
-    commentInput.placeholder = "Comentários desativados";
-    commentInput.disabled = true;
-    commentBtn.disabled = true;
-    return;
-  }
-
-  currentThreadUrl = script.thread_url;
-  commentInput.disabled = false;
-  commentBtn.disabled = false;
-  commentInput.placeholder = "Clique aqui para comentar no Discord";
-
-  commentsBox.innerHTML = `
-    <p style="opacity:.7">Comentários são feitos no Discord.</p>
-    <p style="opacity:.7">Clique abaixo para abrir o tópico.</p>
-  `;
+  commentsBox.innerHTML = "Clique abaixo para comentar no Discord.";
+  currentThreadUrl = script.thread_url || null;
 }
-
-// ====================== COMMENT CLICK ======================
 
 commentInput.onclick = () => {
   if (currentThreadUrl) window.open(currentThreadUrl, "_blank");
@@ -232,7 +216,7 @@ function showEmpty() {
 
 function escapeHTML(text) {
   return String(text).replace(/[&<>"']/g, m =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&lt;", '"': "&quot;", "'": "&#039;" }[m])
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])
   );
 }
 
