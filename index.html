@@ -1,1 +1,268 @@
---home ainda não configurado
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Luay Scripts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #2a1246;
+      --bg2: #3a1b63;
+      --card: #3d1e6f;
+      --accent: #7b5cff;
+      --green: #3cff9c;
+      --text: #ffffff;
+      --muted: #cfc6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ================= TOPBAR ================= */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .badge {
+      background: var(--accent);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #4b2a86;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.15s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+
+    .btn.green {
+      background: linear-gradient(135deg, #3cff9c, #2bdc85);
+      color: #112b20;
+      font-weight: 700;
+    }
+
+    /* ================= CONTENT ================= */
+
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #3f1f6f, #32145a);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .desc {
+      color: var(--green);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .stat-box {
+      background: linear-gradient(180deg, #482181, #34155f);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .stat-box span {
+      display: block;
+      font-size: 26px;
+      margin-top: 6px;
+      color: var(--green);
+    }
+
+    .poem {
+      margin-top: 40px;
+      font-family: 'Comic Neue', cursive;
+      font-size: 20px;
+      line-height: 1.5;
+      white-space: pre-line;
+      opacity: 0.9;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-family: 'Comic Neue', cursive;
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    .footer a {
+      color: #a7ffdf;
+      text-decoration: underline;
+    }
+
+    /* ================= DESKTOP ================= */
+
+    @media (min-width: 800px) {
+      .container {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .poem, .footer {
+        grid-column: span 2;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= TOPBAR ================= -->
+
+  <div class="topbar">
+    <div class="brand">
+      Luay
+      <span class="badge">Oficial</span>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="https://discord.gg/MwJGfBSXc9" target="_blank">💬 Discord</a>
+      <a class="btn" href="https://higuysdorobloxjoaopk-maker.github.io/Luayscripts.rbx/site.luay.github/index.html">🔎 Scripts</a>
+      <a class="btn green" href="mailto:luayrbx@gmail.com?subject=Contato%20Luay%20Support&body=Olá,">📩 Contato</a>
+    </div>
+  </div>
+
+  <!-- ================= CONTENT ================= -->
+
+  <div class="container">
+
+    <div class="card">
+      <div class="desc">
+        🚀 <strong>Luay Scripts</strong> é uma plataforma moderna para descobrir, publicar e compartilhar scripts Luau de forma rápida e organizada.
+        <br><br>
+        Encontre códigos por criador, explore ferramentas úteis e publique seus próprios scripts diretamente pelo Discord.
+        <br><br>
+        Simples, poderosa e feita para a comunidade.
+        <br><br>
+        — focado em scripts para executores!
+      </div>
+    </div>
+
+    <div class="card stats">
+      <div class="stat-box">
+        Criadores
+        <span id="creatorsCount">0</span>
+      </div>
+      <div class="stat-box">
+        Scripts
+        <span id="scriptsCount">0</span>
+      </div>
+    </div>
+
+    <div class="poem">
+Luay foi criada
+na intenção de
+ser algo simples
+ela é uma biblioteca
+um site um script
+não importa luay
+sempre foi luay e sempre
+será eu amo luay
+    </div>
+
+    <div class="footer">
+      Email – <a href="mailto:luayrbx@gmail.com?subject=Contato%20Luay%20Support&body=Olá,">luayrbx@gmail.com</a>
+      &nbsp;&nbsp;&nbsp; criador – joaopk
+    </div>
+
+  </div>
+
+  <!-- ================= SCRIPT ================= -->
+
+  <script>
+    const OWNER = "higuysdorobloxjoaopk-maker";
+    const REPO = "Luayscripts.rbx";
+    const BASE_PATH = "data/informations/users/Scripts";
+
+    async function gh(path) {
+      const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`);
+      if (!res.ok) throw new Error("Erro GitHub");
+      return res.json();
+    }
+
+    async function loadStats() {
+      let creators = 0;
+      let scripts = 0;
+
+      try {
+        const users = await gh(BASE_PATH);
+
+        for (const user of users) {
+          if (user.type !== "dir") continue;
+          creators++;
+
+          const userScripts = await gh(`${BASE_PATH}/${user.name}`);
+          for (const folder of userScripts) {
+            if (folder.type === "dir") scripts++;
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao carregar stats:", e);
+      }
+
+      document.getElementById("creatorsCount").textContent = creators;
+      document.getElementById("scriptsCount").textContent = scripts;
+    }
+
+    loadStats();
+  </script>
+
+</body>
+</html>
