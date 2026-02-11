@@ -1,135 +1,90 @@
+-- api/luay.lua
+-- Luay $cripts Public API
+
 local HttpService = game:GetService("HttpService")
 
-local OWNER = "higuysdorobloxjoaopk-maker"
-local REPO = "Luayscripts.rbx"
-local BASE = "https://api.github.com/repos/" .. OWNER .. "/" .. REPO .. "/contents/data/informations/users/Scripts"
+local BASE = "https://raw.githubusercontent.com/higuysdorobloxjoaopk-maker/Luayscripts.rbx/main/data/informations/users/Scripts"
 
-local function gh(path)
-  return HttpService:JSONDecode(game:HttpGet(path))
+local API = {}
+
+local function http(url)
+	return game:HttpGet(url)
 end
 
-local function raw(path)
-  return "https://raw.githubusercontent.com/" .. OWNER .. "/" .. REPO .. "/main/" .. path
+local function decode(url)
+	return HttpService:JSONDecode(http(url))
 end
 
-local function normalize(s)
-  return string.lower(tostring(s or ""))
+local function build(script)
+	if script.raw_url then
+		script.loadstring = 'loadstring(game:HttpGet("' .. script.raw_url .. '"))()'
+	end
+	return script
 end
 
-local function wrap(data)
-  return {
-    title = data.title,
-    description = data.description,
-    banner = data.banner,
-    author = data.author,
-    raw = data.raw_url,
-    script = 'loadstring(game:HttpGet("' .. data.raw_url .. '"))()'
-  }
+-- ========================
+-- GET ALL SCRIPTS
+-- ========================
+function API.all()
+	local index = decode(BASE .. "/index.json")
+	local result = {}
+
+	for _, entry in ipairs(index) do
+		local data = decode(BASE .. "/" .. entry.creator .. "/" .. entry.name .. "/data.json")
+		data.creator = entry.creator
+		data.name = entry.name
+		table.insert(result, build(data))
+	end
+
+	return result
 end
 
-local api = {}
+-- ========================
+-- GET BY CREATOR
+-- ========================
+function API.creator(username)
+	local index = decode(BASE .. "/index.json")
+	local result = {}
 
--- 🔥 Retorna TODOS os scripts
-function api.all()
-  local out = {}
-  local users = gh(BASE)
+	for _, entry in ipairs(index) do
+		if entry.creator:lower() == username:lower() then
+			local data = decode(BASE .. "/" .. entry.creator .. "/" .. entry.name .. "/data.json")
+			data.creator = entry.creator
+			data.name = entry.name
+			table.insert(result, build(data))
+		end
+	end
 
-  for _, user in ipairs(users) do
-    if user.type == "dir" then
-      local scripts = gh(user.url)
-      for _, script in ipairs(scripts) do
-        if script.type == "dir" then
-          local dataUrl = raw("data/informations/users/Scripts/" .. user.name .. "/" .. script.name .. "/data.json")
-          local ok, data = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(dataUrl))
-          end)
-          if ok and data then
-            table.insert(out, wrap(data))
-          end
-        end
-      end
-    end
-  end
-
-  return out
+	return result
 end
 
--- 🔥 Retorna por criador
-function api.creator(name)
-  local out = {}
-  name = normalize(name)
+-- ========================
+-- GET BY NAME
+-- ========================
+function API.name(scriptName)
+	local index = decode(BASE .. "/index.json")
+	local result = {}
 
-  local users = gh(BASE)
-  for _, user in ipairs(users) do
-    if normalize(user.name) == name then
-      local scripts = gh(user.url)
-      for _, script in ipairs(scripts) do
-        if script.type == "dir" then
-          local dataUrl = raw("data/informations/users/Scripts/" .. user.name .. "/" .. script.name .. "/data.json")
-          local ok, data = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(dataUrl))
-          end)
-          if ok and data then
-            table.insert(out, wrap(data))
-          end
-        end
-      end
-    end
-  end
+	for _, entry in ipairs(index) do
+		if entry.name:lower():find(scriptName:lower(), 1, true) then
+			local data = decode(BASE .. "/" .. entry.creator .. "/" .. entry.name .. "/data.json")
+			data.creator = entry.creator
+			data.name = entry.name
+			table.insert(result, build(data))
+		end
+	end
 
-  return out
+	return result
 end
 
--- 🔥 Retorna por nome de script
-function api.name(scriptName)
-  local out = {}
-  scriptName = normalize(scriptName)
-
-  local users = gh(BASE)
-  for _, user in ipairs(users) do
-    if user.type == "dir" then
-      local scripts = gh(user.url)
-      for _, script in ipairs(scripts) do
-        if normalize(script.name):find(scriptName, 1, true) then
-          local dataUrl = raw("data/informations/users/Scripts/" .. user.name .. "/" .. script.name .. "/data.json")
-          local ok, data = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(dataUrl))
-          end)
-          if ok and data then
-            table.insert(out, wrap(data))
-          end
-        end
-      end
-    end
-  end
-
-  return out
+-- ========================
+-- GET SPECIFIC SCRIPT
+-- ========================
+function API.creatorscript(username, scriptName)
+	local data = decode(BASE .. "/" .. username .. "/" .. scriptName .. "/data.json")
+	data.creator = username
+	data.name = scriptName
+	return build(data)
 end
 
--- 🔥 Retorna script específico de um criador
-function api.creatorscript(creator, scriptName)
-  creator = normalize(creator)
-  scriptName = normalize(scriptName)
-
-  local users = gh(BASE)
-  for _, user in ipairs(users) do
-    if normalize(user.name) == creator then
-      local scripts = gh(user.url)
-      for _, script in ipairs(scripts) do
-        if normalize(script.name):find(scriptName, 1, true) then
-          local dataUrl = raw("data/informations/users/Scripts/" .. user.name .. "/" .. script.name .. "/data.json")
-          local ok, data = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(dataUrl))
-          end)
-          if ok and data then
-            return wrap(data)
-          end
-        end
-      end
-    end
-  end
-
-  return nil
-end
-
-return api
+return API
