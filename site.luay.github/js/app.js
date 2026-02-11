@@ -19,7 +19,7 @@ const downloadBtn = document.getElementById("downloadBtn");
 
 let allScripts = [];
 
-// ====================== GITHUB HELPERS ======================
+// ====================== GITHUB ======================
 
 async function gh(path) {
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`);
@@ -59,15 +59,10 @@ async function loadScripts() {
         const content = atob(dataFile.content);
         const data = JSON.parse(content);
 
-        data._creatorFolder = user.name;
-        data._slug = scriptFolder.name;
-
-        // RAW sempre vem do data.json
         data._rawUrl = data.raw_url || "";
-
         allScripts.push(data);
       } catch (e) {
-        console.warn("Erro ao ler script:", user.name, scriptFolder.name, e);
+        console.warn("Erro ao ler:", user.name, scriptFolder.name, e);
       }
     }
   }
@@ -81,25 +76,18 @@ function render(list) {
   scriptsContainer.innerHTML = "";
   emptyBox.classList.add("hidden");
 
-  if (!list || list.length === 0) {
-    return showEmpty();
-  }
+  if (!list.length) return showEmpty();
 
   for (const s of list) {
     const card = document.createElement("div");
     card.className = "script-card";
 
-    const banner = s.banner || "assets/default-banner.jpg";
-    const title = s.title || "Sem título";
-    const desc = s.description || "";
-    const author = s.author || "Desconhecido";
-
     card.innerHTML = `
-      <div class="card-banner" style="background-image:url('${escapeAttr(banner)}')"></div>
+      <div class="card-banner" style="background-image:url('${escapeAttr(s.banner || "assets/default-banner.jpg")}')"></div>
       <div class="card-body">
-        <div class="card-title">${escapeHTML(title)}</div>
-        <div class="card-desc">${escapeHTML(desc)}</div>
-        <div class="card-author">${escapeHTML(author)}</div>
+        <div class="card-title">${escapeHTML(s.title || "Sem título")}</div>
+        <div class="card-desc">${escapeHTML(s.description || "")}</div>
+        <div class="card-author">${escapeHTML(s.author || "Desconhecido")}</div>
       </div>
     `;
 
@@ -114,12 +102,10 @@ searchInput.addEventListener("input", () => {
   const q = searchInput.value.trim().toLowerCase();
   if (!q) return render(allScripts);
 
-  const result = allScripts.filter(s =>
+  render(allScripts.filter(s =>
     (s.title || "").toLowerCase().includes(q) ||
     (s.author || "").toLowerCase().includes(q)
-  );
-
-  render(result);
+  ));
 });
 
 // ====================== MODAL ======================
@@ -140,7 +126,7 @@ function openModal(s) {
   copyBtn.onclick = () => {
     navigator.clipboard.writeText(loadstring);
     copyBtn.textContent = "Copiado!";
-    setTimeout(() => (copyBtn.textContent = "Copiar"), 1200);
+    setTimeout(() => copyBtn.textContent = "Copiar", 1200);
   };
 
   downloadBtn.onclick = () => {
