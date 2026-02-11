@@ -11,17 +11,25 @@ body {
   color: white;
 }
 
+/* ================= TOPBAR ================= */
+
 .topbar {
   position: sticky;
   top: 0;
   z-index: 50;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px 16px;
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
@@ -33,29 +41,6 @@ body {
 
 .logo .dollar {
   color: #6dff6d;
-}
-
-.top-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 0 15px;
-}
-
-.top-center input {
-  width: 100%;
-  max-width: 520px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  font-size: 0.95rem;
-  background: rgba(255,255,255,0.15);
-  color: white;
-}
-
-.top-center input::placeholder {
-  color: rgba(255,255,255,0.7);
 }
 
 .top-right {
@@ -91,6 +76,29 @@ body {
   background: rgba(255,255,255,0.25);
 }
 
+/* SEARCH BAR */
+
+.top-search {
+  width: 100%;
+}
+
+.top-search input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+
+.top-search input::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+/* ================= MAIN ================= */
+
 main {
   padding: 30px 24px 60px;
 }
@@ -100,6 +108,8 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 22px;
 }
+
+/* ================= CARD ================= */
 
 .script-card {
   background: rgba(0,0,0,0.35);
@@ -135,6 +145,9 @@ main {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .card-desc {
@@ -147,10 +160,33 @@ main {
   margin-top: 6px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 0.8rem;
   opacity: 0.9;
 }
+
+/* BADGES */
+
+.badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-gold {
+  background: linear-gradient(135deg, gold, orange);
+  color: black;
+}
+
+.badge-blue {
+  background: linear-gradient(135deg, #5dade2, #2e86c1);
+  color: white;
+}
+
+/* ================= EMPTY ================= */
 
 .empty {
   margin-top: 80px;
@@ -166,6 +202,8 @@ main {
 .hidden {
   display: none !important;
 }
+
+/* ================= MODAL ================= */
 
 .modal {
   position: fixed;
@@ -224,6 +262,9 @@ main {
 .modal-content h1 {
   font-size: 1.5rem;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-content p {
@@ -235,7 +276,7 @@ main {
 .modal-author {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 0.9rem;
   font-weight: 600;
   opacity: 0.95;
@@ -282,4 +323,20 @@ main {
 #copyBtn:hover,
 #downloadBtn:hover {
   filter: brightness(1.1);
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 640px) {
+  main {
+    padding: 22px 16px 50px;
+  }
+
+  .modal-banner {
+    height: 160px;
+  }
+
+  .modal-content h1 {
+    font-size: 1.25rem;
+  }
 }
