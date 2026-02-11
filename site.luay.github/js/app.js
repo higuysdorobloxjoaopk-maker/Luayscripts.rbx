@@ -2,6 +2,13 @@ const OWNER = "higuysdorobloxjoaopk-maker";
 const REPO = "Luayscripts.rbx";
 const BASE_PATH = "data/informations/users/Scripts";
 
+// IDs de admins/oficiais (badge dourado)
+const OFFICIAL_AUTHORS = new Set([
+  "0000", // Luay
+  "admin1",
+  "admin2"
+]);
+
 const scriptsContainer = document.getElementById("scripts");
 const searchInput = document.getElementById("search");
 const emptyBox = document.getElementById("empty");
@@ -60,6 +67,10 @@ async function loadScripts() {
         const data = JSON.parse(content);
 
         data._rawUrl = data.raw_url || "";
+        data._creator = data.author || user.name;
+        data._creatorId = data.author_id || "";
+        data._verified = data.verificado === true;
+
         allScripts.push(data);
       } catch (e) {
         console.warn("Erro ao ler:", user.name, scriptFolder.name, e);
@@ -82,12 +93,25 @@ function render(list) {
     const card = document.createElement("div");
     card.className = "script-card";
 
+    const isOfficial = OFFICIAL_AUTHORS.has(s._creatorId);
+    const isVerified = s._verified;
+
+    let badgeHTML = "";
+    if (isOfficial) {
+      badgeHTML = `<span class="badge badge-gold">Verificado</span>`;
+    } else if (isVerified) {
+      badgeHTML = `<span class="badge badge-blue">Verificado</span>`;
+    }
+
     card.innerHTML = `
       <div class="card-banner" style="background-image:url('${escapeAttr(s.banner || "assets/default-banner.jpg")}')"></div>
       <div class="card-body">
-        <div class="card-title">${escapeHTML(s.title || "Sem título")}</div>
+        <div class="card-title">
+          ${escapeHTML(s.title || "Sem título")}
+          ${badgeHTML}
+        </div>
         <div class="card-desc">${escapeHTML(s.description || "")}</div>
-        <div class="card-author">${escapeHTML(s.author || "Desconhecido")}</div>
+        <div class="card-author">${escapeHTML(s._creator || "Desconhecido")}</div>
       </div>
     `;
 
@@ -104,7 +128,8 @@ searchInput.addEventListener("input", () => {
 
   render(allScripts.filter(s =>
     (s.title || "").toLowerCase().includes(q) ||
-    (s.author || "").toLowerCase().includes(q)
+    (s._creator || "").toLowerCase().includes(q) ||
+    (s.description || "").toLowerCase().includes(q)
   ));
 });
 
@@ -114,9 +139,16 @@ function openModal(s) {
   modal.classList.remove("hidden");
 
   modalBanner.style.backgroundImage = `url('${s.banner || "assets/default-banner.jpg"}')`;
-  modalTitle.textContent = s.title || "";
+  modalTitle.innerHTML = `
+    ${escapeHTML(s.title || "")}
+    ${OFFICIAL_AUTHORS.has(s._creatorId)
+      ? `<span class="badge badge-gold">Verificado</span>`
+      : s._verified
+      ? `<span class="badge badge-blue">Verificado</span>`
+      : ""}
+  `;
   modalDesc.textContent = s.description || "";
-  modalAuthor.textContent = s.author || "";
+  modalAuthor.textContent = s._creator || "";
 
   const raw = s._rawUrl;
   const loadstring = `loadstring(game:HttpGet("${raw}"))()`;
