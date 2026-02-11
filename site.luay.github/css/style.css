@@ -11,8 +11,6 @@ body {
   color: white;
 }
 
-/* ================= TOPBAR ================= */
-
 .topbar {
   position: sticky;
   top: 0;
@@ -93,8 +91,6 @@ body {
   background: rgba(255,255,255,0.25);
 }
 
-/* ================= MAIN ================= */
-
 main {
   padding: 30px 24px 60px;
 }
@@ -104,8 +100,6 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 22px;
 }
-
-/* ================= CARD ================= */
 
 .script-card {
   background: rgba(0,0,0,0.35);
@@ -158,25 +152,6 @@ main {
   opacity: 0.9;
 }
 
-.card-author img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.official-badge {
-  margin-left: auto;
-  background: linear-gradient(135deg, gold, orange);
-  color: black;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 3px 7px;
-  border-radius: 999px;
-}
-
-/* ================= EMPTY ================= */
-
 .empty {
   margin-top: 80px;
   text-align: center;
@@ -191,8 +166,6 @@ main {
 .hidden {
   display: none !important;
 }
-
-/* ================= MODAL ================= */
 
 .modal {
   position: fixed;
@@ -268,16 +241,6 @@ main {
   opacity: 0.95;
 }
 
-.modal-author img {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-}
-
-.modal-author .official-badge {
-  font-size: 0.7rem;
-}
-
 .modal-content pre {
   margin-top: 8px;
   background: rgba(0,0,0,0.45);
@@ -320,48 +283,3 @@ main {
 #downloadBtn:hover {
   filter: brightness(1.1);
 }
-
-/* ================= COMMENTS ================= */
-
-.comments {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,0.12);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.comments-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.comments-list {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.comment-input {
-  display: flex;
-  gap: 8px;
-}
-
-.comment-input input {
-  flex: 1;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: rgba(255,255,255,0.15);
-  color: white;
-}
-
-.comment-input button {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(255,255,255,0.25);
-  color: white;
-  cursor: not-allowed;
-  }
